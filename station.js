@@ -1,4 +1,5 @@
-/** explore */
+/** Space Station */
+
 var playfield = $("#playfield");
 var inner = $("#playfield-inner");
 
