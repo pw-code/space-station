@@ -3,15 +3,18 @@ var playfield = $("#playfield");
 var inner = $("#playfield-inner");
 
 var TILE_SIZE_PX = 64;
+var BACKGROUND_SIZE_PX = 645;
 
-function tile(prefix, turnHandler, clickHandler) {
+function tile(prefix, turnHandler) {
 	this.prefix = prefix;
 	this.turnHandler = turnHandler;
 }
 
 var Tiles = {
 	NewTile: new tile("new", null),
-	Connector: new tile("connector", null)
+	Connector: new tile("connector", null),
+	Oxygen: new tile("oxygen", null),
+	Food: new tile("food", null),
 };
 
 function randomTile() {
@@ -33,11 +36,13 @@ var upcomingTiles = [];
 /* placed tiles {}{} */
 var placed  = {};
 /* [y][x] = {
-     type: (null == placeable location)
+     tile: the tile type
      elem: associated html div
    }
  */
 
+var minTileX = 0;
+var minTileY = 0;
 
 /* get tile or null */
 function getTile(x,y) {
@@ -51,7 +56,7 @@ function isPlaceable(x,y) {
 	if (!tile) {
 		return false;
 	} else {
-		return tile.type == null;
+		return tile.tile == null;
 	}
 }
 
@@ -64,7 +69,7 @@ function placeTile(x,y, tile) {
     
 	var elem = $("<div>");
 	elem.addClass("tile").addClass("tile-" + tile.prefix);
-	elem.css("background-url", tile.prefix + ".png");
+	elem.css("background-image", "url(tile-" + tile.prefix + ".png)");
 	elem.css("left", (x * TILE_SIZE_PX) + "px");
 	elem.css("top", (y * TILE_SIZE_PX) + "px");
 	elem.css("width", TILE_SIZE_PX + "px");
@@ -76,7 +81,7 @@ function placeTile(x,y, tile) {
 		placed[y] = {};
 	}
 	placed[y][x] = {
-		type: tile,
+		tile: tile,
 		elem: elem
 	};
 
@@ -95,14 +100,63 @@ function placeTile(x,y, tile) {
 			placeTile(x,y+1, Tiles.NewTile);
 		}
 	}
+
+	//ensure background fits
+	minTileX = Math.min(x, minTileX);
+	minTileY = Math.min(y, minTileY);
 }
+
+
+function updateScoreUI() {
+	$("#score").text(score);
+	$("#science").text(science);
+	$("#power").text(power);
+	$("#oxygen").text(oxygen);
+	$("#food").text(food);
+}
+
+function nextTurn() {
+	// new random tile to queue
+	upcomingTiles.push(randomTile());
+
+	// each module functions
+	$.each(placed, function(index, placedY) {
+		$.each(placedY, function(index2, placedXY) {
+			var tile = placedXY.tile;
+			var turnFunc = tile.turnHandler;
+			if (turnFunc) {
+				turnFunc();
+			}
+		});
+	});
+
+	// score update
+	updateScoreUI();
+}
+
+function updateUpcomingTiles() {
+}
+
+/* make background stay with modules and cover the screen too */
+function fixBackgroundImage() {
+	//ensure background fits
+	var offset = inner.offset();
+	var bgStartX = offset.left - 5 * BACKGROUND_SIZE_PX;
+	var bgStartY = offset.top - 5 * BACKGROUND_SIZE_PX;
+	playfield.css("background-position-x", bgStartX + "px");
+	playfield.css("background-position-y", bgStartY + "px");
+}
+
 
 /* start */
 placeTile(0,0, Tiles.Connector);
 inner.css("top", (playfield.height() - TILE_SIZE_PX)/2 + "px");
 inner.css("left", (playfield.width() - TILE_SIZE_PX)/2 + "px");
+fixBackgroundImage();
 
 upcomingTiles.push(Tiles.Connector);
+updateUpcomingTiles();
+updateScoreUI();
 
 /* playfield is dragable */
 var wasDragged = false;
@@ -114,13 +168,14 @@ playfield.on("mousedown", function(event) {
 	event.setCapture && event.setCapture();
 	wasDragged = false;
 	playfield.on("mousemove", function(event) {
+		wasDragged = true;
 		var dx = event.pageX - mouseDownX;
 		var dy = event.pageY - mouseDownY;
 		var offset = inner.offset();
 		offset.top = innerStart.top + dy;
 		offset.left = innerStart.left + dx;
 		inner.offset(offset);
-		wasDragged = true;
+		fixBackgroundImage();
 	});
 	playfield.on("mouseup mouseleave", function(event) {
 		playfield.off("mouseup").off("mousemove");
@@ -141,7 +196,7 @@ inner.on("click", ".tile-new", function(e) {
 	var clickY = Math.floor((e.pageY - inner.offset().top) / TILE_SIZE_PX);
 	// place the next in line tile here
 	placeTile(clickX, clickY, upcomingTiles.shift());
-	// new random
-	upcomingTiles.push(randomTile());
+	// do turn-based stuff
+	nextTurn();
 });
 

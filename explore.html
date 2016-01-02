@@ -6,8 +6,21 @@
    <script src="jquery-1.11.3.min.js"></script>
  </head>
  <body>
-   <div id="title">The Explorer</div>
-   <div id="playfield"><div id="playfield-inner"></div></div>
+   <div id="header">
+   		<h1>The Explorer</h1>
+		<ul id="score-bar">
+			<li>Score <span id="score"></span></li>
+			<li>Science <span id="science"></span></li>
+			<li>Power <span id="power"></span></li>
+			<li>Oxygen <span id="oxygen"></span></li>
+			<li>Food <span id="food"></span></li>
+		</ul>
+	</div>
+ 
+   <div id="playfield">
+     <div id="playfield-inner"></div>
+   </div>
+
    <script src="explore.js"></script>
  </body>
 </html>
