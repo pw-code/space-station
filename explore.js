@@ -5,26 +5,6 @@ var inner = $("#playfield-inner");
 var TILE_SIZE_PX = 64;
 var BACKGROUND_SIZE_PX = 645;
 
-function tile(prefix, turnHandler) {
-	this.prefix = prefix;
-	this.turnHandler = turnHandler;
-}
-
-var Tiles = {
-	NewTile: new tile("new", null),
-	Connector: new tile("connector", null),
-	Oxygen: new tile("oxygen", null),
-	Food: new tile("food", null),
-};
-
-function randomTile() {
-	var keys = Object.keys(Tiles);
-	keys.splice(0,1);
-	var rnd = Math.floor(Math.random() * keys.length);
-	var tile = Tiles[keys[rnd]]
-	return tile;
-}
-
 var score = 0;
 var science = 0;
 var power = 0;
@@ -43,6 +23,42 @@ var placed  = {};
 
 var minTileX = 0;
 var minTileY = 0;
+
+function tile(prefix, turnHandler) {
+	this.prefix = prefix;
+	this.turnHandler = turnHandler;
+}
+
+var Tiles = {
+	NewTile: new tile("new", null),
+	Connector: new tile("connector", null),
+	Oxygen: new tile("oxygen", function() {
+		oxygen += 5;
+		power -= 1;
+	}),
+	Food: new tile("food", function() {
+		food += 2;
+		power -= 1;
+	}),
+	Science: new tile("science", function() {
+		science += 1;
+		food -= 1;
+		power -= 2;
+	}),
+	Power: new tile("power", function() {
+		power += 10;
+	}),
+};
+
+
+function randomTile() {
+	var keys = Object.keys(Tiles);
+	keys.splice(0,1);
+	var rnd = Math.floor(Math.random() * keys.length);
+	var tile = Tiles[keys[rnd]]
+	return tile;
+}
+
 
 /* get tile or null */
 function getTile(x,y) {
@@ -74,7 +90,7 @@ function placeTile(x,y, tile) {
 	elem.css("top", (y * TILE_SIZE_PX) + "px");
 	elem.css("width", TILE_SIZE_PX + "px");
 	elem.css("height", TILE_SIZE_PX + "px");
-	elem.text(tile.prefix);//debug
+	//elem.text(tile.prefix);//debug
 	inner.append(elem);
 
 	if (!placed[y]) {
@@ -143,6 +159,9 @@ function fixBackgroundImage() {
 	var offset = inner.offset();
 	var bgStartX = offset.left - 5 * BACKGROUND_SIZE_PX;
 	var bgStartY = offset.top - 5 * BACKGROUND_SIZE_PX;
+	// adjust for slight paralax effect
+	bgStartX *= 0.9;
+	bgStartY *= 0.9;
 	playfield.css("background-position-x", bgStartX + "px");
 	playfield.css("background-position-y", bgStartY + "px");
 }
@@ -161,6 +180,9 @@ updateScoreUI();
 /* playfield is dragable */
 var wasDragged = false;
 playfield.on("mousedown", function(event) {
+	if (event.button != 1) {
+		return;
+	}
 	var mouseDownX = event.pageX;
 	var mouseDownY = event.pageY;
 	var innerStart = inner.offset();
