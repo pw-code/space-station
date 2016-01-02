@@ -1,0 +1,31 @@
+body {
+  height: 100%;
+}
+
+#title {
+	font-size: 16px;
+}
+
+#playfield {
+  position: absolute;
+  top: 3em;
+  right: 1em;
+  left: 1em;
+  bottom: 1em;
+  background: #375837;
+  overflow: hidden;
+  cursor: default;
+}
+#playfield-inner {
+  position: absolute;
+  overflow: visible;
+}
+
+.tile {
+	border: 1px solid #4D714D;
+}
+
+.tile-new {
+	background: #444;
+	cursor: pointer;
+}
