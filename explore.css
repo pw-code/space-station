@@ -12,20 +12,27 @@ body {
   right: 1em;
   left: 1em;
   bottom: 1em;
-  background: #375837;
+  background: #2F402F;
   overflow: hidden;
   cursor: default;
 }
+#playfield.drag {
+	cursor: move;
+}
+
 #playfield-inner {
   position: absolute;
   overflow: visible;
 }
 
 .tile {
-	border: 1px solid #4D714D;
+  background: #2B442B;
+  border: 1px solid #2B442B;
+  overflow: hidden;
+  position: absolute;
 }
 
 .tile-new {
-	background: #444;
+	background: #2B442B;
 	cursor: pointer;
 }
