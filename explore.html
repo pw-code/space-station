@@ -9,7 +9,7 @@
    <div id="header">
    		<h1>The Explorer</h1>
 		<ul id="score-bar">
-			<li>Score <span id="score"></span></li>
+			<li>Score <span class="score"></span></li>
 			<li>Science <span id="science"></span></li>
 			<li>Power <span id="power"></span></li>
 			<li>Oxygen <span id="oxygen"></span></li>
@@ -19,6 +19,21 @@
  
    <div id="playfield">
      <div id="playfield-inner"></div>
+   </div>
+
+   <div id="menu" class="active">
+     <div id="menu-inner">
+        <h1>The Explorer</h1>
+		<div id="game-over">
+			<div>Game Over!</div>
+			<div id="game-over-reason"></div>
+			<p>Score: <span class="score"></span></p>
+		</div>
+		<p>
+			Build a space station. Explore science.
+		</p>
+		<button id="start">Start</button>
+     </div>
    </div>
 
    <script src="explore.js"></script>

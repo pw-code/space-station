@@ -6,10 +6,12 @@ var TILE_SIZE_PX = 64;
 var BACKGROUND_SIZE_PX = 645;
 
 var score = 0;
+var turns = 0;
 var science = 0;
 var power = 0;
 var oxygen = 0;
 var food = 0;
+var running = false;
 
 var upcomingTiles = [];
 
@@ -50,6 +52,41 @@ var Tiles = {
 	}),
 };
 
+
+function initGame() {
+	score = 0;
+	turns = 0;
+	science = 0;
+	power = 10;
+	oxygen = 10;
+	food = 10;
+
+	upcomingTiles = [];
+	placed  = {};
+	$(".tile").remove();
+
+	placeTile(0,0, Tiles.Connector);
+	inner.css("top", (playfield.height() - TILE_SIZE_PX)/2 + "px");
+	inner.css("left", (playfield.width() - TILE_SIZE_PX)/2 + "px");
+	fixBackgroundImage();
+
+	upcomingTiles.push(Tiles.Connector);
+	updateUpcomingTiles();
+	updateScoreUI();
+}
+
+function startGame() {
+	$("#menu").removeClass("active");
+	running = true;
+	initGame();
+}
+
+function stopGame(reason) {
+	running = false;
+	$("#game-over").css("display", "block");
+	$("#game-over-reason").text(reason);
+	$("#menu").addClass("active");
+}
 
 function randomTile() {
 	var keys = Object.keys(Tiles);
@@ -124,11 +161,17 @@ function placeTile(x,y, tile) {
 
 
 function updateScoreUI() {
-	$("#score").text(score);
+	$(".score").text(score);
 	$("#science").text(science);
 	$("#power").text(power);
 	$("#oxygen").text(oxygen);
 	$("#food").text(food);
+
+	if (running) {
+		$("#menu").removeClass("active");
+	} else {
+		$("#menu").addClass("active");
+	}
 }
 
 function nextTurn() {
@@ -146,8 +189,22 @@ function nextTurn() {
 		});
 	});
 
+	turns+=1;
+	score = turns + science;
+
 	// score update
 	updateScoreUI();
+
+	// End?
+	if (power < 1) {
+		stopGame("Ran out of power");
+	}
+	if (oxygen < 1) {
+		stopGame("Asphyxiation: Not enough oxygen");
+	}
+	if (food < 1) {
+		stopGame("Starvation: No more food to eat");
+	}
 }
 
 function updateUpcomingTiles() {
@@ -168,19 +225,15 @@ function fixBackgroundImage() {
 
 
 /* start */
-placeTile(0,0, Tiles.Connector);
-inner.css("top", (playfield.height() - TILE_SIZE_PX)/2 + "px");
-inner.css("left", (playfield.width() - TILE_SIZE_PX)/2 + "px");
-fixBackgroundImage();
-
-upcomingTiles.push(Tiles.Connector);
-updateUpcomingTiles();
-updateScoreUI();
+initGame();
 
 /* playfield is dragable */
 var wasDragged = false;
 playfield.on("mousedown", function(event) {
-	if (event.button != 1) {
+	if (!running) {
+		return;
+	}
+	if (event.button != 0) {
 		return;
 	}
 	var mouseDownX = event.pageX;
@@ -213,6 +266,9 @@ inner.on("click", ".tile-new", function(e) {
 	if (wasDragged) {
 		return;
 	}
+	if (!running) {
+		return;
+	}
 	//clicked x,y on a New tile
 	var clickX = Math.floor((e.pageX - inner.offset().left) / TILE_SIZE_PX);
 	var clickY = Math.floor((e.pageY - inner.offset().top) / TILE_SIZE_PX);
@@ -222,3 +278,4 @@ inner.on("click", ".tile-new", function(e) {
 	nextTurn();
 });
 
+$("#start").on("click", startGame);
