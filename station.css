@@ -34,6 +34,9 @@ body {
 	font-size: 18px;
 	min-width: 5em;
 }
+#score-bar li .score {
+	margin-right: 50px;
+}
 
 #playfield {
 	position: absolute;
@@ -54,6 +57,41 @@ body {
 	overflow: visible;
 }
 
+#module-next {
+	position: absolute;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	height: 50px;
+	background-color: rgba(37, 49, 60, 0.6);
+	border-top: 1px solid rgba(255,255,255,0.2);
+	padding-left: 32px;
+}
+
+#module-next:before {
+	content: "Next:";
+	color: rgba(255, 255, 255, 0.64);
+	position: absolute;
+	left: 0;
+	top: 4px;
+}
+
+#module-next .tile {
+	position: relative;
+	display: inline-block;
+	margin: 2px;
+	margin-left: 4px;
+	overflow: hidden;
+	opacity: 0.3;
+	padding: 0;
+	background-size: 75%;
+	width: 50px
+}
+#module-next .tile:first-child {
+	opacity: 1;
+}
+
+
 #menu {
 	position: absolute;
 	left: 0px;
@@ -63,7 +101,7 @@ body {
 	display: none;
 }
 #menu.active {
-	background: rgba(255,255,255,0.7);
+	background: rgba(255,255,255,0.8);
 	display: block;
 }
 
@@ -94,6 +132,7 @@ body {
 	color: white;
 	overflow: hidden;
 	position: absolute;
+	background-repeat: no-repeat;
 }
 
 .tile-new {

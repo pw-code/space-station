@@ -68,10 +68,9 @@ function initGame() {
 
 	placeTile(0,0, Tiles.Connector);
 	inner.css("top", (playfield.height() - TILE_SIZE_PX)/2 + "px");
-	inner.css("left", (playfield.width() - TILE_SIZE_PX)/2 + "px");
+	inner.css("left", (playfield.width() - TILE_SIZE_PX - 16)/2 + "px");
 	fixBackgroundImage();
 
-	upcomingTiles.push(Tiles.Connector);
 	updateUpcomingTiles();
 	updateScoreUI();
 }
@@ -114,6 +113,16 @@ function isPlaceable(x,y) {
 	}
 }
 
+function makeTileElement(tile) {
+	var elem = $("<div>");
+	elem.addClass("tile").addClass("tile-" + tile.prefix);
+	elem.css("background-image", "url(tile-" + tile.prefix + ".png)");
+	elem.css("width", TILE_SIZE_PX + "px");
+	elem.css("height", TILE_SIZE_PX + "px");
+	//elem.text(tile.prefix);//debug
+	return elem;
+}
+
 function placeTile(x,y, tile) {
 	//remove old tile first
 	var oldTile = getTile(x,y);
@@ -121,14 +130,9 @@ function placeTile(x,y, tile) {
 		oldTile.elem.remove();
 	}
     
-	var elem = $("<div>");
-	elem.addClass("tile").addClass("tile-" + tile.prefix);
-	elem.css("background-image", "url(tile-" + tile.prefix + ".png)");
+	var elem = makeTileElement(tile);
 	elem.css("left", (x * TILE_SIZE_PX) + "px");
 	elem.css("top", (y * TILE_SIZE_PX) + "px");
-	elem.css("width", TILE_SIZE_PX + "px");
-	elem.css("height", TILE_SIZE_PX + "px");
-	//elem.text(tile.prefix);//debug
 	inner.append(elem);
 
 	if (!placed[y]) {
@@ -176,8 +180,6 @@ function updateScoreUI() {
 }
 
 function nextTurn() {
-	// new random tile to queue
-	upcomingTiles.push(randomTile());
 
 	// each module functions
 	$.each(placed, function(index, placedY) {
@@ -195,6 +197,7 @@ function nextTurn() {
 
 	// score update
 	updateScoreUI();
+	updateUpcomingTiles();
 
 	// End?
 	if (power < 1) {
@@ -209,6 +212,15 @@ function nextTurn() {
 }
 
 function updateUpcomingTiles() {
+	$("#module-next .tile:first-child").remove();
+	upcomingTiles.shift();
+
+	while(upcomingTiles.length < 50) {
+		var tile = randomTile();
+		upcomingTiles.push(tile);
+		var elem = makeTileElement(tile);
+		$("#module-next").append(elem);
+	}
 }
 
 /* make background stay with modules and cover the screen too */
@@ -274,7 +286,7 @@ inner.on("click", ".tile-new", function(e) {
 	var clickX = Math.floor((e.pageX - inner.offset().left) / TILE_SIZE_PX);
 	var clickY = Math.floor((e.pageY - inner.offset().top) / TILE_SIZE_PX);
 	// place the next in line tile here
-	placeTile(clickX, clickY, upcomingTiles.shift());
+	placeTile(clickX, clickY, upcomingTiles[0]);
 	// do turn-based stuff
 	nextTurn();
 });
