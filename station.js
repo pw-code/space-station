@@ -5,6 +5,7 @@ var inner = $("#playfield-inner");
 
 var TILE_SIZE_PX = 64;
 var BACKGROUND_SIZE_PX = 645;
+var CHOOSALBE_SIZE = 3;
 
 var score = 0;
 var turns = 0;
@@ -16,6 +17,7 @@ var people = 0;
 var running = false;
 
 var upcomingTiles = [];
+var upcomingChosenIndex = -1;
 
 /* placed tiles {}{} */
 var placed  = {};
@@ -28,39 +30,65 @@ var placed  = {};
 var minTileX = 0;
 var minTileY = 0;
 
-function tile(prefix, turnHandler) {
+function tile(prefix, initHandler, turnHandler, tipHtml) {
 	this.prefix = prefix;
+	this.initHandler = initHandler;
 	this.turnHandler = turnHandler;
+	this.tipHtml = tipHtml;
 }
 
 var Tiles = {
 	NewTile: new tile("new"),
-	Habitation: new tile("habitation", function() {
-		people += 1;
-	}, function() {
-		oxygen -= 1;
-	}),
-	Oxygen: new tile("oxygen", function() {
-	}, function() {
-		oxygen += 5;
-		power -= 1;
-	}),
-	Food: new tile("food", function() {
-	}, function() {
-		food += 2;
-		power -= 1;
-	}),
-	Science: new tile("science", function() {
-	}, function() {
-		science += 1;
-		food -= 1;
-		power -= 2;
-	}),
-	Power: new tile("power", function() {
-	}, function() {
-		power += 1;
-	}),
-	Connector: new tile("connector")
+
+	Habitation: new tile("habitation",
+		function() {
+			people += 2;
+		},
+		function() {
+			power -= 1;
+		},
+		"Provides sleeping and personal space for 2 people. People will consume oxygen.<p>-1 Power"),
+
+	Oxygen: new tile("oxygen",
+		function() {
+		},
+		function() {
+			oxygen += 5;
+			power -= 1;
+		},
+		"Produces oxygen.<p>+5 Oxygen<br>-1 Power"),
+
+	Food: new tile("food",
+		function() {
+		},
+		function() {
+			food += 2;
+			oxygen -= 1;
+			power -= 1;
+		},
+		"Farming for food.<p>+2 Food<br>-1 Oxygen<br>-1 Power"),
+
+	Science: new tile("science",
+		function() {
+		},
+		function() {
+			science += (people / countTiles(Tiles.Science));
+			power -= 1;
+		},
+		"Research science. The quantity depends on the number of people present.<p>+ Science<br>-1 Power"),
+
+	Power: new tile("power",
+		function() {
+		},
+		function() {
+			power += 5;
+		},
+		"Power generation for the station.<p>+5 Power"),
+
+	Connector: new tile("connector",
+		null,
+		null,
+		"Connects to other modules")
 };
 
 
@@ -68,19 +96,24 @@ function initGame() {
 	score = 0;
 	turns = 0;
 	science = 0;
-	power = 10;
-	oxygen = 10;
-	food = 10;
-	people = 1;
+	power = 0;
+	oxygen = 0;
+	food = 0;
+	people = 0;
 
 	upcomingTiles = [];
 	placed  = {};
 	$(".tile").remove();
 
+	fixBackgroundImage();
 	placeTile(0,0, Tiles.Connector);
 	inner.css("top", (playfield.height() - TILE_SIZE_PX)/2 + "px");
-	inner.css("left", (playfield.width() - TILE_SIZE_PX - 16)/2 + "px");
-	fixBackgroundImage();
+	inner.css("left", (playfield.width() - TILE_SIZE_PX - 18)/2 + "px");
+
+	//initial sane set to get started with
+	addUpcomingTile(Tiles.Power);
+	addUpcomingTile(Tiles.Oxygen);
+	addUpcomingTile(Tiles.Food);
 
 	updateUpcomingTiles();
 	updateScoreUI();
@@ -107,6 +140,17 @@ function randomTile() {
 	return tile;
 }
 
+function countTiles(tileType) {
+	var count = 0;
+	$.each(placed, function(index, placedY) {
+		$.each(placedY, function(index2, placedXY) {
+			if (placedXY.tile === tileType) {
+				count++;
+			}
+		});
+	});
+	return count;
+}
 
 /* get tile or null */
 function getTile(x,y) {
@@ -131,6 +175,12 @@ function makeTileElement(tile) {
 	elem.css("width", TILE_SIZE_PX + "px");
 	elem.css("height", TILE_SIZE_PX + "px");
 	//elem.text(tile.prefix);//debug
+	if (tile.tipHtml) {
+		var tip = $("<div>");
+		tip.addClass("tip");
+		tip.html(tile.tipHtml);
+		tip.appendTo(elem);
+	}
 	return elem;
 }
 
@@ -139,6 +189,10 @@ function placeTile(x,y, tile) {
 	var oldTile = getTile(x,y);
 	if (oldTile) {
 		oldTile.elem.remove();
+	}
+
+	if (tile.initHandler) {
+		tile.initHandler();
 	}
     
 	var elem = makeTileElement(tile);
@@ -193,6 +247,10 @@ function updateScoreUI() {
 
 function nextTurn() {
 
+	// these do not stack/store. Fresh values on each turn
+	power = 0;
+	oxygen = 0;
+
 	// each module functions
 	$.each(placed, function(index, placedY) {
 		$.each(placedY, function(index2, placedXY) {
@@ -204,36 +262,52 @@ function nextTurn() {
 		});
 	});
 
-	turns+=1;
+	oxygen -= people;
+
+	turns += 1;
 	score = turns + science;
 
-	// score update
-	updateScoreUI();
-	updateUpcomingTiles();
-
 	// End?
-	if (power < 1) {
-		stopGame("Ran out of power");
-	}
-	if (oxygen < 1) {
+	// Check end before updating UI - we prefer not to display negatives
+	if (power < 0) {
+		stopGame("Blackout: Ran out of power");
+	} else if (oxygen < 0) {
 		stopGame("Asphyxiation: Not enough oxygen");
+	} else if (food < 0) {
+		stopGame("Starvation: No enough food to eat");
+	} else {
+
+		// still running
+		updateScoreUI();
+		updateUpcomingTiles();
 	}
-	if (food < 1) {
-		stopGame("Starvation: No more food to eat");
-	}
+
+}
+
+function addUpcomingTile(tile) {
+	upcomingTiles.push(tile);
+	var elem = makeTileElement(tile);
+	$("#module-next").append(elem);
 }
 
 function updateUpcomingTiles() {
-	$("#module-next .tile:first-child").remove();
-	upcomingTiles.shift();
 
 	while(upcomingTiles.length < 50) {
-		var tile = randomTile();
-		upcomingTiles.push(tile);
-		var elem = makeTileElement(tile);
-		$("#module-next").append(elem);
+		addUpcomingTile(randomTile());
+	}
+
+	var elems = $("#module-next .tile");
+	elems.removeClass("choosable").removeClass("selected");
+	for (i=0; i<CHOOSALBE_SIZE && i < elems.length; ++i) {
+		$(elems[i]).addClass("choosable");
 	}
 }
+
+function removeChoosableUpcomingTile(index) {
+	upcomingTiles.splice(index, 1);
+	$("#module-next .tile")[index].remove();
+}
+
 
 /* make background stay with modules and cover the screen too */
 function fixBackgroundImage() {
@@ -285,22 +359,31 @@ playfield.on("mousedown", function(event) {
 });
 
 
-/* new tiles are clickable */
+/* new tile spaces are clickable (when visible) */
 inner.on("click", ".tile-new", function(e) {
 	e.preventDefault();
-	if (wasDragged) {
-		return;
-	}
-	if (!running) {
+	if (wasDragged || !running || upcomingChosenIndex < 0) {
 		return;
 	}
 	//clicked x,y on a New tile
 	var clickX = Math.floor((e.pageX - inner.offset().left) / TILE_SIZE_PX);
 	var clickY = Math.floor((e.pageY - inner.offset().top) / TILE_SIZE_PX);
 	// place the next in line tile here
-	placeTile(clickX, clickY, upcomingTiles[0]);
+	placeTile(clickX, clickY, upcomingTiles[upcomingChosenIndex]);
+	removeChoosableUpcomingTile(upcomingChosenIndex);
+	upcomingChosenIndex = -1;
+	$(".tile-new").css("display", "none");
 	// do turn-based stuff
 	nextTurn();
+});
+
+$("#module-next").on("click", ".tile.choosable", function() {
+	$("#module-next .tile").removeClass("selected");
+	upcomingChosenIndex = $.inArray(this, $("#module-next .tile.choosable"));
+	if (upcomingChosenIndex >= 0) {
+		$(this).addClass("selected");
+		$(".tile-new").css("display", "block");
+	}
 });
 
 $("#start").on("click", startGame);
