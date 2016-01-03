@@ -57,55 +57,6 @@ body {
 	overflow: visible;
 }
 
-#module-next {
-	position: absolute;
-	bottom: 0;
-	left: 0;
-	right: 0;
-	height: 50px;
-	background-color: rgba(37, 49, 60, 0.6);
-	border-top: 1px solid rgba(255,255,255,0.2);
-	padding-left: 32px;
-}
-
-#module-next:before {
-	content: "Next:";
-	color: rgba(255, 255, 255, 0.64);
-	position: absolute;
-	left: 0;
-	top: 4px;
-}
-
-#module-next .tile {
-	position: relative;
-	display: inline-block;
-	margin: 1px 2px 0px;
-	overflow: visible;
-	opacity: 0.3;
-	padding: 0;
-	background-size: 72%;
-	background-position-x: 8px;
-	border: 1px solid transparent;
-}
-#module-next .tile.choosable {
-	opacity: 0.9;
-	margin: 1px 0 0;
-	cursor: pointer;
-}
-#module-next .tile.choosable:hover {
-	opacity: 1;
-	background-size: 75%;
-}
-#module-next .tile.selected {
-	opacity: 1;
-	background-color: rgba(47, 87, 97, 0.71);
-	background-size: 75%;
-}
-
-#module-next .tile:not(.choosable) .tip {
-	display: none;
-}
-
 
 #menu {
 	position: absolute;
@@ -126,10 +77,14 @@ body {
 	margin: auto;
 	margin-top: 25%;
 	text-align: center;
+	background: rgba(134, 142, 165, 0.43);
+	border: 2px solid #eee;
+	border-radius: 8px;
 }
 #menu-inner button {
 	font-size: 16px;
 	color: #4134DE;
+	margin-top: 30px;
 }
 
 #game-over {
@@ -198,5 +153,54 @@ body {
 	position: absolute;
 	bottom: -7px;
 	left: 24px;
+}
+
+#module-next {
+	position: absolute;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	height: 52px;
+	background-color: rgba(37, 49, 60, 0.6);
+	border-top: 1px solid rgba(255,255,255,0.2);
+	padding-left: 32px;
+	overflow: visible;
+}
+#module-next:before {
+	content: "Next:";
+	color: rgba(255, 255, 255, 0.64);
+	position: absolute;
+	left: 0;
+	top: 4px;
+}
+
+#module-next .tile {
+	position: relative;
+	display: inline-block;
+	margin: 1px 2px 0px;
+	overflow: visible;
+	opacity: 0.3;
+	padding: 0;
+	background-size: 72%;
+	background-position-x: 8px;
+	border: 1px solid transparent;
+}
+#module-next .tile.choosable {
+	opacity: 0.9;
+	margin: 1px 0 0;
+	cursor: pointer;
+}
+#module-next .tile.choosable:hover {
+	opacity: 1;
+	background-size: 75%;
+}
+#module-next .tile.selected {
+	opacity: 1;
+	background-color: rgba(47, 87, 97, 0.71);
+	background-size: 75%;
+}
+
+#module-next .tile:not(.choosable) .tip {
+	display: none;
 }
 

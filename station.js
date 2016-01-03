@@ -108,7 +108,7 @@ function initGame() {
 	fixBackgroundImage();
 	placeTile(0,0, Tiles.Connector);
 	inner.css("top", (playfield.height() - TILE_SIZE_PX)/2 + "px");
-	inner.css("left", (playfield.width() - TILE_SIZE_PX - 18)/2 + "px");
+	inner.css("left", (playfield.width() - TILE_SIZE_PX - 2)/2 + "px");
 
 	//initial sane set to get started with
 	addUpcomingTile(Tiles.Power);
@@ -287,12 +287,19 @@ function nextTurn() {
 function addUpcomingTile(tile) {
 	upcomingTiles.push(tile);
 	var elem = makeTileElement(tile);
+	elem.css("height", "46px");
 	$("#module-next").append(elem);
 }
 
 function updateUpcomingTiles() {
-
-	while(upcomingTiles.length < 50) {
+	var maxVisibleTiles = Math.max(
+		CHOOSALBE_SIZE,
+		Math.floor($(window).width() / (TILE_SIZE_PX + 8)));
+	while(upcomingTiles.length > maxVisibleTiles) {
+		upcomingTiles.pop();
+		$("#module-next .tile")[upcomingTiles.length].remove();
+	}
+	while(upcomingTiles.length < maxVisibleTiles) {
 		addUpcomingTile(randomTile());
 	}
 
