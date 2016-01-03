@@ -12,6 +12,7 @@ var science = 0;
 var power = 0;
 var oxygen = 0;
 var food = 0;
+var people = 0;
 var running = false;
 
 var upcomingTiles = [];
@@ -33,24 +34,33 @@ function tile(prefix, turnHandler) {
 }
 
 var Tiles = {
-	NewTile: new tile("new", null),
-	Connector: new tile("connector", null),
+	NewTile: new tile("new"),
+	Habitation: new tile("habitation", function() {
+		people += 1;
+	}, function() {
+		oxygen -= 1;
+	}),
 	Oxygen: new tile("oxygen", function() {
+	}, function() {
 		oxygen += 5;
 		power -= 1;
 	}),
 	Food: new tile("food", function() {
+	}, function() {
 		food += 2;
 		power -= 1;
 	}),
 	Science: new tile("science", function() {
+	}, function() {
 		science += 1;
 		food -= 1;
 		power -= 2;
 	}),
 	Power: new tile("power", function() {
-		power += 10;
+	}, function() {
+		power += 1;
 	}),
+	Connector: new tile("connector")
 };
 
 
@@ -61,6 +71,7 @@ function initGame() {
 	power = 10;
 	oxygen = 10;
 	food = 10;
+	people = 1;
 
 	upcomingTiles = [];
 	placed  = {};
@@ -171,6 +182,7 @@ function updateScoreUI() {
 	$("#power").text(power);
 	$("#oxygen").text(oxygen);
 	$("#food").text(food);
+	$("#people").text(people);
 
 	if (running) {
 		$("#menu").removeClass("active");
